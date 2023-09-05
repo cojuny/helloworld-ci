@@ -7,6 +7,6 @@ public class HelloWorldPrinterTest {
     @Test
     public void testPrintHelloWorld() {
         App app = new App();
-        assertEquals("Hello World!\n", app.hello_world());
+        assertEquals("Hello World!", app.hello_world());
     }
 }
