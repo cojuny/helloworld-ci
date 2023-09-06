@@ -44,14 +44,17 @@ pipeline {
                 scannerHome = tool 'sonar5.5'
             }
             steps {
-                sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=helloworld \
-                   -Dsonar.projectName=helloworld \
-                   -Dsonar.projectVersion=1.0 \
-                   -Dsonar.sources=src/ \
-                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+                withSonarQubeEnv('sonar') {
+                    sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=helloworld \
+                    -Dsonar.projectName=helloworld \
+                    -Dsonar.projectVersion=1.0 \
+                    -Dsonar.sources=src/ \
+                    -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                    -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+                }
 
             }
-        }
+
 
     }
 }
