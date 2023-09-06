@@ -41,7 +41,7 @@ pipeline {
 
         stage('Sonar Analysis') {
             environment {
-                scannerHome = tool 'sonar5.5'
+                scannerHome = tool 'SonarQube Scanner 4.7.0'
             }
             steps {
                 withSonarQubeEnv('sonar') {
@@ -49,12 +49,11 @@ pipeline {
                     -Dsonar.projectName=helloworld \
                     -Dsonar.projectVersion=1.0 \
                     -Dsonar.sources=src/ \
+                    -Dsonar.java.binaries=target/test-classes/com/cojuny/ \
                     -Dsonar.junit.reportsPath=target/surefire-reports/ \
                     -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
                 }
-
             }
-
-
+        }
     }
 }
