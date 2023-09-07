@@ -55,5 +55,35 @@ pipeline {
                 }
             }
         }
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage("UploadArtifact"){
+            steps{
+                nexusArtifactUploader(
+                  nexusVersion: 'nexus3',
+                  protocol: 'http',
+                  nexusUrl: '192.168.56.56:8081',
+                  groupId: 'com.cojuny',
+                  version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                  repository: 'helloworld-repo',
+                  credentialsId: 'nexuslogin',
+                  artifacts: [
+                    [artifactId: 'helloworldapp',
+                     classifier: '',
+                     file: 'target/helloworld-1.0-SNAPSHOT.jar',
+                     type: 'jar']
+                    ]
+                )
+            }
+        }
     }
 }
