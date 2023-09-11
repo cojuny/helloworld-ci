@@ -49,7 +49,7 @@ pipeline {
                 scannerHome = tool 'SonarQube Scanner 4.7.0'
             }
             steps {
-                withSonarQubeEnv('sonar') {
+                withSonarQubeEnv('sonarqube-server') {
                     sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=helloworld \
                     -Dsonar.projectName=helloworld \
                     -Dsonar.projectVersion=1.0 \
@@ -80,7 +80,7 @@ pipeline {
                   groupId: 'com.cojuny',
                   version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
                   repository: 'helloworld-repo',
-                  credentialsId: 'nexuslogin',
+                  credentialsId: 'nexus-credentials',
                   artifacts: [
                     [artifactId: 'helloworldapp',
                      classifier: '',
