@@ -5,6 +5,11 @@ def COLOR_MAP = [
 
 pipeline {
     agent any
+
+    environment {
+        REPO = "cojuny/helloworld-ci"
+    }
+
     tools {
         maven "MAVEN3"
         jdk "java-11-openjdk-amd64"
@@ -14,7 +19,7 @@ pipeline {
         stage('Fetch Code') {
 
             steps {
-                git branch: 'main', url: 'https://github.com/cojuny/jenkins-maven-ci.git'
+                git branch: 'main', url: 'https://github.com/$REPO.git'
             }
         }
 
@@ -90,6 +95,38 @@ pipeline {
                 )
             }
         }
+        
+        stage('Release') {
+            steps {
+                withCredentials([string(credentialsId: 'github-token', variable: 'TOKEN')]) {
+                sh '''#!/bin/bash
+                    LAST_LOG=$(git log --format='%H' --max-count=1 origin/main)
+                    echo "LAST_LOG:$LAST_LOG"
+                    LAST_MERGE=$(git log --format='%H' --merges --max-count=1 origin/main)
+                    echo "LAST_MERGE:$LAST_MERGE"
+                    LAST_MSG=$(git log --format='%s' --max-count=1 origin/main)
+                    echo "LAST_MSG:$LAST_MSG"
+                    VERSION=$(echo $LAST_MSG | grep --only-matching 'v\\?[0-9]\\+\\.[0-9]\\+\\(\\.[0-9]\\+\\)\\?')
+                    echo "VERSION:$VERSION"
+                    
+                    if [[ $LAST_LOG == $LAST_MERGE && -n $VERSION ]]
+                    then
+                        DATA='{
+                            "tag_name": "'$VERSION'",
+                            "target_commitish": "main",
+                            "name": "'$VERSION'",
+                            "body": "'$LAST_MSG'",
+                            "draft": false,
+                            "prerelease": false
+                        }'
+                        curl --data "$DATA" "https://api.github.com/repos/$REPO/releases?access_token=$TOKEN"
+                    fi
+                    '''
+                }
+            }
+        }
+
+
     }
     post {
         always {
@@ -100,4 +137,3 @@ pipeline {
         }
     }
 }
-
