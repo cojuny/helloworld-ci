@@ -20,8 +20,11 @@ Key principles of Continuous Integration include:
 
 [Jenkins](https://www.jenkins.io/) is a popular open-source server application for automating software development tasks such as building, testing, and deploying code changes.
 
-**Pipeline as Code (PaaC)** is an approach of building the entire pipleline using a single file. The file defines the processes of build, test, and deployment. Allowing the pipeline easier to manage, share, and improve. Jenkins uses Groovy source syntax which should be named as Jenkinsfile, the pipeline can be built by placing this file in the git repository and start Jenkins job as defining the repository url.
+**Pipeline as Code (PaaC)** is an approach to building the entire pipeline using a single file. The file defines the processes of build, test, and deployment. Allowing the pipeline easier to manage, share, and improve. Jenkins uses Groovy source syntax called Jenkinsfile. The pipeline can be built by placing Jenkinsfile in the Github repository and starting a Jenkins job by specifying the repository url.
 
+## Architectural Overview
+
+![Diagram](architecture.png)
 
 ### Getting Started with Jenkins Pipeline as Code
 
