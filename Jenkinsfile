@@ -7,7 +7,7 @@ pipeline {
     agent any
 
     environment {
-        REPO = "cojuny/helloworld-ci"
+        def REPO = "cojuny/helloworld-ci"
     }
 
     tools {
@@ -96,7 +96,7 @@ pipeline {
             }
         }
         
-        
+        /*
         stage('Github Release') {
             when {
                 expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') }
@@ -104,8 +104,8 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'github-token', variable: 'TOKEN')]) {
                     script {
+                        
 
-                       
                         def response = sh(script: """
                             curl -X POST \
                                 -H "Accept: application/vnd.github+json" \
@@ -113,14 +113,14 @@ pipeline {
                                 -H "X-GitHub-Api-Version: 2022-11-28" \
                                 https://api.github.com/repos/${REPO}/releases \
                                 -d '{
-                                    "tag_name": "v1.0.0",
-                                    "target_commitish": "main",
+                                    
+                                    "target_commitish": "81ade2b37753abaa1fdb6aafcc05cfedebf333c8",
                                     "name": "helloworld-ci Release",
                                     "body": "Continuous Integration for Java Maven helloworld",
                                     "draft": false,
                                     "prerelease": false
                                 }'
-                        """, returnStatus: true)
+                        """)
 
                         if (response == 0) {
                             currentBuild.result = 'SUCCESS'
@@ -132,6 +132,7 @@ pipeline {
             
             }
         }
+        */
     
     }
     
