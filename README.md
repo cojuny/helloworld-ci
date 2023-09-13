@@ -1,9 +1,11 @@
 
 # Hello World Continuous Integration
 
+
+![Diagram](output.jpeg)
 ### Project Introduction
 
-A Java example of Continuous Integration using Jenkins Pipeline as Code (PaaC). The function of the code is merely simple, print "Hello World!" when executed. The primary focus of the project is on demonstrating the automated CI pipeline for the code.
+A Java example of Continuous Integration using Jenkins Pipeline as Code (PaaC). The function of the code is simple, print "Hello World!" when executed. The primary focus of the project is on setting up a Continuous Integration pipeline for the repository.
 
 ## What is Continuous Integration (CI)?
 
@@ -26,60 +28,97 @@ Key principles of Continuous Integration include:
 
 ![Diagram](architecture.png)
 
-### Getting Started with Jenkins Pipeline as Code
-
-To start using Jenkins Pipeline as Code, follow these steps:
-
-1. **Install Jenkins:** If you haven't already, install and set up Jenkins on your server.
-2. **Install Required Plugins:** Install any necessary Jenkins plugins for your project's build and deployment needs.
-3. **Create a Jenkinsfile:** In your project's repository, create a file named `Jenkinsfile` to define your pipeline stages and steps. This file is written in the Groovy-based DSL (Domain-Specific Language) specifically designed for Jenkins pipelines.
-4. **Configure Jenkins:** Configure your Jenkins server to recognize and use the `Jenkinsfile` from your repository.
-5. **Run Your Pipeline:** Trigger your pipeline manually or set up webhooks or triggers to automate the execution of your pipeline whenever changes are pushed to the repository.
-6. **Monitor and Improve:** Monitor the progress and success of your pipeline runs. Continuously refine and improve your pipeline as needed.
-
-For more detailed information on setting up Jenkins Pipeline as Code and configuring Jenkins for your specific project, refer to the Jenkins documentation and resources.
-
 ### Servers and Tools Used
 
-#### Virtual Machines Provisioned by Vagrant and Bash:
+#### Vagrant Hosted Servers in Virtual Machines:
 
-1. **Jenkins Server (192.168.56.55:8080):** Jenkins serves as the central automation server for building, testing, and deploying your projects.
-2. **Nexus Server (192.168.56.55:8081):** Nexus is used for storing and versioning artifacts, facilitating dependency management in your projects.
-3. **SonarQube Server (192.168.56.56):** SonarQube is employed for code quality analysis, helping to identify and rectify code issues.
+1. **Jenkins Server (192.168.56.55:8080):** Jenkins serves as the central automation server for the CI pipeline, the server has jdk11 and Maven installed.
+2. **Nexus Server (192.168.56.56:8081):** Nexus is used for storing and versioning artifacts, all the past build artifacts are stored here.
+3. **SonarQube Server (192.168.56.57):** SonarQube is employed for code quality analysis, the analysis results can be viewed in both Jenkins and SonarQube servers.
 
 #### Tools:
 
 - **JDK Version 11:** Java Development Kit version 11 is utilized for building and running Java applications.
-- **Apache Maven Version 3:** Maven version 3 is employed as the build and dependency management tool for your projects.
+- **Apache Maven Version 3:** Maven version 3 manages the dependencies of the project, and communicates with Jenkins to build, test, package, and analyze the source code.
 - **Slack:** Slack is used for notifying the results of the continuous integration after each build, facilitating team communication and collaboration.
-- **GitHub Repository:** GitHub is the version control platform where your project's code is hosted and from which changes are fetched and integrated into your CI/CD pipelines.
+- **GitHub Repository:** The GitHub repository has all of the Jenkinsfile and source codes in one place, it is referenced by Jenkins to fetch these codes.
 
-tools
+### Setting Things Up
 
-maven "MAVEN3"
+1. **Bring up the virtual machines**:
+    * (a) Make sure [Vagrant](https://developer.hashicorp.com/vagrant/docs/installation) is installed on your local machine
+    * (b) Locate to directory /server-config
+    * (c) Run:
+           ```
+            vagrant up
+          ```
+2. **Jenkins server configuration**:
+   * (a) Login to Jenkins and do the initial setups:
+       
+        [http://192.168.56.55:8080/](http://192.168.56.55:8080/)
 
-    jdk "java-11-openjdk-amd64"
+   * (b) In Manage Jenkins >> Plugins, install following Jenkins plugins:
 
-tool 'SonarQube Scanner 4.7.0'
+          Nexus Artifact Uploader
+          Pipeline Maven Integration
+          Pipeline Utility Steps
+          Slack Notification Plugin
+          SonarQube Scanner for Jenkins
 
-git
+   * (c) In Manage Jenkins >> Tools, set up the following tools:
 
-settings
+        * JDK installation:
+            - Name: java-11-openjdk-amd64
+            - JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+         
+        * Git installations:
+            - Name: Default
+            - Path to Git executable: git
+          
+        * SonarQube Scanner installations:
+            - Name: SonarQube Scanner 4.7.0
+            - Version: SonarQube Scanner 4.7.0.2747
+          
+        * Maven installations:
+            - Name: MAVEN3
+            - Install Automatically: ✅
+            - Version: 3.9.4
+              
+   * (d) In Manage Jenkins >> System, configure the following items:
 
-sonarqube server
+       * Jenkins Location:
+         - Jenkins URL: http://192.168.56.55:8080/
+            
+       * SonarQube servers:
+         - Environment variables: ✅
+         - Name: sonarqube-server
+         - Server URL: http://192.168.56.57/
+         - Server authentication token: Add -> Jenkins -> kind: Secret Text -> *"go to the server, generate and paste a token here"*
 
-build timestamp
+        * Build Timestamp:
+         - Enable BUILD_TIMESTAMP: ✅
 
-slack
+        * Slack *(Change the team and channel name in Jenkinsfile too)*:
+          - Workspace: *"your slack team name"*
+          - Credential: Add -> Jenkins -> kind: Secret Text -> *"go to the server, generate and paste a token here"*
+          - Default channel / member id: *"your slack channel name"*
+         
+   * (e) In Manage Jenkins >> Credentials, add credentials for Nexus:
+       * Go go Credentials >> System >> Global Credentials
+           - kind: Username with passwords: *"go to the server, generate and paste a token here"*
+           - *("The initial setup for Nexus is necessary, go to the server, configure password, create repository 'helloworld-repo'")*
+        
+         
+3. **Create Jenkins job**:
+   * (a) Select "+ New Item":
+       * Name: helloworld-ci
+       * Pipeline: ✅
+   * (b) Configuration >> Pipeline:
+       * Definition: Pipleline script from SCM
+       * SCM: git
+       * Repository URL: https://github.com/cojuny/helloworld-ci
 
-Plugins
+4. **BUILD with confidence**
 
-Nexus Artifact Uploader
 
-Pipeline Maven Integration
 
-Pipeline Utility Steps
-
-Slack Notification Plugin
-
-SonarQube Scanner for Jenkins
