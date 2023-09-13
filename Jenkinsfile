@@ -19,7 +19,7 @@ pipeline {
         stage('Fetch Code') {
 
             steps {
-                git branch: 'main', url: 'https://github.com/$REPO.git'
+                git branch: 'main', url: "https://github.com/${REPO}.git"
             }
         }
 
@@ -76,7 +76,7 @@ pipeline {
         //    }
         //}
 
-        stage("UploadArtifact"){
+        stage("Upload Artifact"){
             steps{
                 nexusArtifactUploader(
                   nexusVersion: 'nexus3',
@@ -96,38 +96,45 @@ pipeline {
             }
         }
         
-        stage('Release') {
+        
+        stage('Github Release') {
+            when {
+                expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') }
+            }
             steps {
                 withCredentials([string(credentialsId: 'github-token', variable: 'TOKEN')]) {
-                sh '''#!/bin/bash
-                    LAST_LOG=$(git log --format='%H' --max-count=1 origin/main)
-                    echo "LAST_LOG:$LAST_LOG"
-                    LAST_MERGE=$(git log --format='%H' --merges --max-count=1 origin/main)
-                    echo "LAST_MERGE:$LAST_MERGE"
-                    LAST_MSG=$(git log --format='%s' --max-count=1 origin/main)
-                    echo "LAST_MSG:$LAST_MSG"
-                    VERSION=$(echo $LAST_MSG | grep --only-matching 'v\\?[0-9]\\+\\.[0-9]\\+\\(\\.[0-9]\\+\\)\\?')
-                    echo "VERSION:$VERSION"
-                    
-                    if [[ $LAST_LOG == $LAST_MERGE && -n $VERSION ]]
-                    then
-                        DATA='{
-                            "tag_name": "'$VERSION'",
-                            "target_commitish": "main",
-                            "name": "'$VERSION'",
-                            "body": "'$LAST_MSG'",
-                            "draft": false,
-                            "prerelease": false
-                        }'
-                        curl --data "$DATA" "https://api.github.com/repos/$REPO/releases?access_token=$TOKEN"
-                    fi
-                    '''
+                    script {
+
+                       
+                        def response = sh(script: """
+                            curl -X POST \
+                                -H "Accept: application/vnd.github+json" \
+                                -H "Authorization: Bearer ${TOKEN}" \
+                                -H "X-GitHub-Api-Version: 2022-11-28" \
+                                https://api.github.com/repos/${REPO}/releases \
+                                -d '{
+                                    "tag_name": "v1.0.0",
+                                    "target_commitish": "main",
+                                    "name": "helloworld-ci Release",
+                                    "body": "Continuous Integration for Java Maven helloworld",
+                                    "draft": false,
+                                    "prerelease": false
+                                }'
+                        """, returnStatus: true)
+
+                        if (response == 0) {
+                            currentBuild.result = 'SUCCESS'
+                        } else {
+                            currentBuild.result = 'FAILURE'
+                        }
+                    }
                 }
+            
             }
         }
-
-
+    
     }
+    
     post {
         always {
             echo 'Slack Notifications.'
